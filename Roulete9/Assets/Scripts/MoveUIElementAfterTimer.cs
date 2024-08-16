@@ -8,7 +8,7 @@ public class MoveUIElementAfterTimer : MonoBehaviour
     [SerializeField] private TextMeshProUGUI timerText; // Use TextMeshProUGUI for the timer text
     [SerializeField] private float startingXPosition = 0f;
     [SerializeField] private float endingXPosition = 550f;
-    [SerializeField] private float timeToWait = 5f; // Time in seconds
+    [SerializeField] private float timeToWait = 20f; // Time in seconds
     [SerializeField] private float moveDuration = 1f; // Duration of the move
     [SerializeField] private Color startColor = Color.green;
     [SerializeField] private Color endColor = Color.red;

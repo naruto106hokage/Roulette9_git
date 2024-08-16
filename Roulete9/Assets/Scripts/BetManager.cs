@@ -10,11 +10,9 @@ public class BetManager : MonoBehaviour
 {
     [SerializeField] private GameObject imagePrefab;
     [SerializeField] private Button[] buttons;
+    [SerializeField] private Button[] betValueButtons;
     [SerializeField] private Sprite[] levelSprites;
     [SerializeField] private int[] thresholds;
-    [SerializeField] private Button[] betValueButtons;
-    [SerializeField] private CanvasGroup bannerCanvasGroup;
-    [SerializeField] private CanvasGroup smallBetBannerCanvasGroup; // New CanvasGroup for small bets
     [SerializeField] private TextMeshProUGUI totalBetValueText;
     [SerializeField] private Image[] neighbourBetImages;
     [SerializeField] private Button clearBet;
@@ -30,55 +28,98 @@ public class BetManager : MonoBehaviour
 
     void Start()
     {
-        foreach (Button button in buttons)
+        // Add null checks before adding listeners or performing operations
+        if (buttons != null)
         {
-            button.onClick.AddListener(() => OnButtonClick(button));
+            foreach (Button button in buttons)
+            {
+                if (button != null)
+                {
+                    button.onClick.AddListener(() => OnButtonClick(button));
+                }
+                else
+                {
+                    Debug.LogWarning("One of the buttons is null.");
+                }
+            }
         }
 
-        foreach (Button betButton in betValueButtons)
+        if (betValueButtons != null)
         {
-            betButton.onClick.AddListener(() => OnBetValueButtonClick(betButton));
+            foreach (Button betValueButton in betValueButtons)
+            {
+                if (betValueButton != null)
+                {
+                    betValueButton.onClick.AddListener(() => SetBetValue(betValueButton));
+                }
+                else
+                {
+                    Debug.LogWarning("One of the bet value buttons is null.");
+                }
+            }
         }
 
-        clearBet.onClick.AddListener(DestroyAllImages);
-        doubleBet.onClick.AddListener(DoubleAllBets);
-        removeBetButton.onClick.AddListener(ToggleDeleteMode);
+        if (clearBet != null)
+        {
+            clearBet.onClick.AddListener(DestroyAllImages);
+        }
+        else
+        {
+            Debug.LogWarning("Clear Bet button is null.");
+        }
+
+        if (doubleBet != null)
+        {
+            doubleBet.onClick.AddListener(DoubleAllBets);
+        }
+        else
+        {
+            Debug.LogWarning("Double Bet button is null.");
+        }
+
+        if (removeBetButton != null)
+        {
+            removeBetButton.onClick.AddListener(ToggleDeleteMode);
+        }
+        else
+        {
+            Debug.LogWarning("Remove Bet button is null.");
+        }
 
         EnableButtons(true);
     }
 
-    private void OnBetValueButtonClick(Button betButton)
+    private void SetBetValue(Button betValueButton)
     {
-        TextMeshProUGUI tmpText = betButton.GetComponentInChildren<TextMeshProUGUI>();
-        if (tmpText != null && int.TryParse(tmpText.text, out int value))
+        // Retrieve bet value from the TextMeshProUGUI component of the button
+        TextMeshProUGUI betValueText = betValueButton.GetComponentInChildren<TextMeshProUGUI>();
+        Debug.Log("betValueText: "+ betValueText);
+        if (betValueText != null && int.TryParse(betValueText.text, out int value))
         {
             selectedBetValue = value;
-            Debug.Log($"Bet value button pressed: {betButton.name}, Value: {selectedBetValue}");
+            Debug.Log($"Bet value set to: {selectedBetValue}");
         }
         else
         {
-            Debug.LogError("Invalid bet value format or TextMeshPro component missing.");
+            Debug.LogWarning("Bet value button does not have a valid integer text.");
         }
     }
 
     private void OnButtonClick(Button clickedButton)
     {
-        Debug.Log($"Button pressed: {clickedButton.name}");
+        Debug.Log($"Button pressed: {clickedButton?.name}");
 
         if (selectedBetValue == 0)
         {
-            ShowBanner("Select a bet value first.");
+            Debug.LogWarning("No bet value selected.");
             return;
         }
 
         string buttonName = clickedButton.name;
-        if (selectedBetValue < 10)
+        if (selectedBetValue < 10 && !IsValidSingleNumberButton(buttonName))
         {
-            if (!IsValidSingleNumberButton(buttonName))
-            {
-                ShowBanner("Small bets can only be placed on single numbers.");
-                return;
-            }
+            Debug.LogWarning("Small bets can only be placed on single numbers.");
+            return;
         }
 
         GameObject newImage = Instantiate(imagePrefab, clickedButton.transform.parent);
@@ -87,21 +128,31 @@ public class BetManager : MonoBehaviour
         RectTransform newImageRectTransform = newImage.GetComponent<RectTransform>();
 
         // Copy position and size from the button
-        newImageRectTransform.anchoredPosition = buttonRectTransform.anchoredPosition;
-        newImage.transform.localRotation = Quaternion.identity;
-
-        foreach (var neighbourBetImage in neighbourBetImages)
+        if (buttonRectTransform != null && newImageRectTransform != null)
         {
-            if (string.Equals(neighbourBetImage.name, buttonName, System.StringComparison.OrdinalIgnoreCase))
+            newImageRectTransform.anchoredPosition = buttonRectTransform.anchoredPosition;
+            newImage.transform.localRotation = Quaternion.identity;
+
+            if (neighbourBetImages != null)
             {
-                newImageRectTransform.sizeDelta = neighbourBetImage.GetComponent<RectTransform>().sizeDelta;
-                newImageRectTransform.anchoredPosition = neighbourBetImage.GetComponent<RectTransform>().anchoredPosition;
-                newImageRectTransform.localScale = neighbourBetImage.GetComponent<RectTransform>().localScale;
-                newImageRectTransform.pivot = neighbourBetImage.GetComponent<RectTransform>().pivot;
-                newImageRectTransform.anchorMin = neighbourBetImage.GetComponent<RectTransform>().anchorMin;
-                newImageRectTransform.anchorMax = neighbourBetImage.GetComponent<RectTransform>().anchorMax;
-                newImageRectTransform.rotation = neighbourBetImage.GetComponent<RectTransform>().rotation;
-                break;
+                foreach (var neighbourBetImage in neighbourBetImages)
+                {
+                    if (neighbourBetImage != null && string.Equals(neighbourBetImage.name, buttonName, System.StringComparison.OrdinalIgnoreCase))
+                    {
+                        RectTransform neighbourRectTransform = neighbourBetImage.GetComponent<RectTransform>();
+                        if (neighbourRectTransform != null)
+                        {
+                            newImageRectTransform.sizeDelta = neighbourRectTransform.sizeDelta;
+                            newImageRectTransform.anchoredPosition = neighbourRectTransform.anchoredPosition;
+                            newImageRectTransform.localScale = neighbourRectTransform.localScale;
+                            newImageRectTransform.pivot = neighbourRectTransform.pivot;
+                            newImageRectTransform.anchorMin = neighbourRectTransform.anchorMin;
+                            newImageRectTransform.anchorMax = neighbourRectTransform.anchorMax;
+                            newImageRectTransform.rotation = neighbourRectTransform.rotation;
+                        }
+                        break;
+                    }
+                }
             }
         }
 
@@ -128,7 +179,7 @@ public class BetManager : MonoBehaviour
             rectTransform.anchoredPosition = Vector2.zero;
         }
 
-        if (int.TryParse(tmpComponent.text, out int currentValue))
+        if (tmpComponent != null && int.TryParse(tmpComponent.text, out int currentValue))
         {
             int newValue = currentValue + selectedBetValue;
             tmpComponent.text = newValue.ToString();
@@ -234,106 +285,63 @@ public class BetManager : MonoBehaviour
 
     public void DisableButtons()
     {
-        foreach (Button button in buttons)
+        if (buttons != null)
         {
-            button.interactable = false;
+            foreach (Button button in buttons)
+            {
+                if (button != null)
+                {
+                    button.interactable = false;
+                }
+            }
         }
     }
 
     public void EnableButtons(bool enable)
     {
-        foreach (Button button in buttons)
+        if (buttons != null)
         {
-            button.interactable = enable;
-        }
-    }
-
-    private void ShowBanner(string message)
-    {
-        if (selectedBetValue == 0)
-        {
-            // Display the general banner when no bet value is selected
-            totalBetValueText.text = message;
-            bannerCanvasGroup.alpha = 1;
-            bannerCanvasGroup.gameObject.SetActive(true);
-            Invoke("FadeOutBanner", 1f);
-        }
-        else if (selectedBetValue < 10)
-        {
-            // Display the small bet banner if the selected bet value is less than 10
-            smallBetBannerCanvasGroup.alpha = 1;
-            smallBetBannerCanvasGroup.gameObject.SetActive(true);
-            Invoke("FadeOutSmallBetBanner", 1f);
-        }
-        else
-        {
-            // Display the general banner for other cases
-            totalBetValueText.text = message;
-            bannerCanvasGroup.alpha = 1;
-            bannerCanvasGroup.gameObject.SetActive(true);
-            Invoke("FadeOutBanner", 1f);
-        }
-    }
-
-    private void FadeOutSmallBetBanner()
-    {
-        StartCoroutine(FadeCanvasGroup(smallBetBannerCanvasGroup, 1f, 0f, 3f));
-    }
-
-    private void FadeOutBanner()
-    {
-        StartCoroutine(FadeCanvasGroup(bannerCanvasGroup, 1f, 0f, 3f));
-    }
-
-    private IEnumerator FadeCanvasGroup(CanvasGroup cg, float start, float end, float duration)
-    {
-        float elapsedTime = 0f;
-        while (elapsedTime < duration)
-        {
-            cg.alpha = Mathf.Lerp(start, end, elapsedTime / duration);
-            elapsedTime += Time.deltaTime;
-            yield return null;
-        }
-        cg.alpha = end;
-        cg.gameObject.SetActive(end > 0);
-    }
-
-    private void UpdateBets(string position, int amount)
-    {
-        if (betsPlaced.ContainsKey(position))
-        {
-            betsPlaced[position] += amount;
-        }
-        else
-        {
-            betsPlaced[position] = amount;
+            foreach (Button button in buttons)
+            {
+                if (button != null)
+                {
+                    button.interactable = enable;
+                }
+            }
         }
     }
 
     public void DestroyAllImages()
     {
-        foreach (var image in imagesToActivate)
+        foreach (GameObject image in imagesToActivate)
         {
             Destroy(image);
         }
         imagesToActivate.Clear();
         betsPlaced.Clear();
+        positionOfBetPlaced.Clear(); // Clear the dictionary when all images are destroyed
         UpdateTotalBetValue();
-    }
-
-    public void DeactivateAllImages()
-    {
-        foreach (var image in imagesToActivate)
-        {
-            image.SetActive(false);
-        }
     }
 
     private void DoubleAllBets()
     {
-        foreach (var key in betsPlaced.Keys.ToList())
+        List<GameObject> currentImages = new List<GameObject>(imagesToActivate);
+        foreach (GameObject image in currentImages)
         {
-            betsPlaced[key] *= 2;
+            OnChipClick(null, image); // Double the bet on each chip
+        }
+        UpdateTotalBetValue();
+    }
+
+    private void UpdateBets(string buttonName, int betValue)
+    {
+        if (betsPlaced.ContainsKey(buttonName))
+        {
+            betsPlaced[buttonName] += betValue;
+        }
+        else
+        {
+            betsPlaced[buttonName] = betValue;
         }
         UpdateTotalBetValue();
     }
@@ -342,23 +350,30 @@ public class BetManager : MonoBehaviour
     {
         isDeleteModeActive = !isDeleteModeActive;
         string mode = isDeleteModeActive ? "Delete Mode Activated" : "Delete Mode Deactivated";
-        ShowBanner(mode);
+        Debug.Log(mode);
     }
 
     private void UpdateTotalBetValue()
     {
-        int totalBetValue = 0;
-        foreach (var bet in betsPlaced.Values)
+        if (totalBetValueText != null)
         {
-            totalBetValue += bet;
-        }
-        totalBetValueText.text = "Total Bet: " + totalBetValue;
+            int totalBetValue = 0;
+            foreach (var bet in betsPlaced.Values)
+            {
+                totalBetValue += bet;
+            }
+            totalBetValueText.text = "Total Bet: " + totalBetValue;
 
-        // Activate or deactivate buttons based on total bet value
-        bool buttonsActive = totalBetValue > 0;
-        clearBet.gameObject.SetActive(buttonsActive);
-        doubleBet.gameObject.SetActive(buttonsActive);
-        removeBetButton.gameObject.SetActive(buttonsActive);
+            // Activate or deactivate buttons based on total bet value
+            bool buttonsActive = totalBetValue > 0;
+            if (clearBet != null) clearBet.gameObject.SetActive(buttonsActive);
+            if (doubleBet != null) doubleBet.gameObject.SetActive(buttonsActive);
+            if (removeBetButton != null) removeBetButton.gameObject.SetActive(buttonsActive);
+        }
+        else
+        {
+            Debug.LogWarning("Total Bet Value Text is null.");
+        }
     }
 
     public Dictionary<string, int> displayBetPositions()
