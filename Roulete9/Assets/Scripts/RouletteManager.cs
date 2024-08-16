@@ -12,10 +12,16 @@ public class RouletteManager : MonoBehaviour
     public float spinDuration = 5f; // Time in seconds for how long the wheel will spin
     public float ballMoveSpeed = 5f; // Speed at which the ball moves along the path
 
+    private Transform targetPoint; // The point where the ball will stop
+
     void Start()
     {
         if (wheelImage != null && ballImage != null && pathPoints.Count > 0)
         {
+            // Generate a random index that corresponds to one of the path points
+            int targetIndex = Random.Range(0, pathPoints.Count);
+            targetPoint = pathPoints[targetIndex];
+
             // Start the spinning and ball movement coroutines
             StartCoroutine(SpinWheel());
             StartCoroutine(MoveBallAlongPath());
@@ -42,25 +48,33 @@ public class RouletteManager : MonoBehaviour
 
     IEnumerator MoveBallAlongPath()
     {
-        // Calculate the duration to move from one point to the next
-        float duration = spinDuration / pathPoints.Count;
         int currentPoint = 0;
 
         while (currentPoint < pathPoints.Count)
         {
-            Transform targetPoint = pathPoints[currentPoint];
+            Transform currentPathPoint = pathPoints[currentPoint];
             float elapsedTime = 0f;
+            float duration = spinDuration / pathPoints.Count;
 
             while (elapsedTime < duration)
             {
-                // Move the ball towards the target point
-                ballImage.rectTransform.position = Vector3.Lerp(ballImage.rectTransform.position, targetPoint.position, elapsedTime / duration);
+                // Move the ball towards the current point
+                ballImage.rectTransform.position = Vector3.Lerp(ballImage.rectTransform.position, currentPathPoint.position, elapsedTime / duration);
                 elapsedTime += Time.deltaTime;
                 yield return null;
             }
 
-            // Snap the ball to the target point at the end of the move
-            ballImage.rectTransform.position = targetPoint.position;
+            // Snap the ball to the current point at the end of the move
+            ballImage.rectTransform.position = currentPathPoint.position;
+
+            // Check if the current point's name matches the randomly selected target point's name
+            if (currentPathPoint.name == targetPoint.name)
+            {
+                // Attach the ball to the target point
+                ballImage.transform.SetParent(currentPathPoint);
+                break; // Stop the movement as the ball has reached the target
+            }
+
             currentPoint++;
         }
     }
