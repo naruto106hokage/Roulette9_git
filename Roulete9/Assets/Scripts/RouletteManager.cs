@@ -13,6 +13,18 @@ public class RouletteManager : MonoBehaviour
     public float ballMoveSpeed = 5f; // Speed at which the ball moves along the path
 
     private Transform targetPoint; // The point where the ball will stop
+    private Vector3 initialBallPosition; // Initial ball position
+    private int totalSpins = 3; // Number of spins
+
+    void Awake()
+    {
+        // Set the ball's position to zero on Awake
+        if (ballImage != null)
+        {
+            initialBallPosition = ballImage.rectTransform.position;
+            ballImage.rectTransform.position = Vector3.zero;
+        }
+    }
 
     void Start()
     {
@@ -48,34 +60,39 @@ public class RouletteManager : MonoBehaviour
 
     IEnumerator MoveBallAlongPath()
     {
-        int currentPoint = 0;
-
-        while (currentPoint < pathPoints.Count)
+        for (int spin = 0; spin < totalSpins; spin++)
         {
-            Transform currentPathPoint = pathPoints[currentPoint];
-            float elapsedTime = 0f;
-            float duration = spinDuration / pathPoints.Count;
+            float currentSpeed = ballMoveSpeed * (1f - (0.3f * spin)); // Decrease speed with each spin
+            int currentPoint = 0;
 
-            while (elapsedTime < duration)
+            while (currentPoint < pathPoints.Count)
             {
-                // Move the ball towards the current point
-                ballImage.rectTransform.position = Vector3.Lerp(ballImage.rectTransform.position, currentPathPoint.position, elapsedTime / duration);
-                elapsedTime += Time.deltaTime;
-                yield return null;
+                Transform currentPathPoint = pathPoints[currentPoint];
+                float elapsedTime = 0f;
+                float duration = spinDuration / pathPoints.Count / currentSpeed;
+
+                while (elapsedTime < duration)
+                {
+                    // Move the ball towards the current point in a linear motion
+                    ballImage.rectTransform.position = Vector3.Lerp(initialBallPosition, currentPathPoint.position, elapsedTime / duration);
+                    elapsedTime += Time.deltaTime;
+                    yield return null;
+                }
+
+                // Snap the ball to the current point at the end of the move
+                ballImage.rectTransform.position = currentPathPoint.position;
+                initialBallPosition = currentPathPoint.position;
+
+                // On the last spin, check if the current point's name matches the target point's name
+                if (spin == totalSpins - 1 && currentPathPoint.name == targetPoint.name)
+                {
+                    // Attach the ball to the target point
+                    ballImage.transform.SetParent(currentPathPoint);
+                    break; // Stop the movement as the ball has reached the target
+                }
+
+                currentPoint++;
             }
-
-            // Snap the ball to the current point at the end of the move
-            ballImage.rectTransform.position = currentPathPoint.position;
-
-            // Check if the current point's name matches the randomly selected target point's name
-            if (currentPathPoint.name == targetPoint.name)
-            {
-                // Attach the ball to the target point
-                ballImage.transform.SetParent(currentPathPoint);
-                break; // Stop the movement as the ball has reached the target
-            }
-
-            currentPoint++;
         }
     }
 }
