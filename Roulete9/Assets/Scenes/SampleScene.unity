@@ -5905,6 +5905,7 @@ GameObject:
   - component: {fileID: 1856884306}
   - component: {fileID: 1856884308}
   - component: {fileID: 1856884309}
+  - component: {fileID: 1856884310}
   m_Layer: 5
   m_Name: GameManager
   m_TagString: Untagged
@@ -5953,6 +5954,7 @@ MonoBehaviour:
   endColor: {r: 1, g: 0, b: 0, a: 1}
   timerFont: {fileID: 12800000, guid: 77ea69da3afd0d946a37831500bb842d, type: 3}
   timerFontSize: 100
+  delayBeforeMovingBack: 10
 --- !u!114 &1856884307
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -6031,6 +6033,34 @@ MonoBehaviour:
   - {fileID: 179318227}
   - {fileID: 817249966}
   - {fileID: 827816162}
+--- !u!114 &1856884310
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1856884304}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2437885907db4f14d80c6ea3b5c75c61, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  wheelImage: {fileID: 2113867110}
+  ballImage: {fileID: 2024180465}
+  pathPoints:
+  - {fileID: 1438611356}
+  - {fileID: 1456680008}
+  - {fileID: 2006007310}
+  - {fileID: 1880432696}
+  - {fileID: 1425299896}
+  - {fileID: 700594068}
+  - {fileID: 1392576826}
+  - {fileID: 2102092947}
+  - {fileID: 27138176}
+  - {fileID: 1956576825}
+  rotationSpeed: 100
+  spinDuration: 5
+  ballMoveSpeed: 5
 --- !u!1 &1859709681
 GameObject:
   m_ObjectHideFlags: 0
