@@ -91,10 +91,8 @@ public class BetManager : MonoBehaviour
 
     private void SetBetValue(Button betValueButton)
     {
-        // Retrieve bet value from the TextMeshProUGUI component of the button
-        TextMeshProUGUI betValueText = betValueButton.GetComponentInChildren<TextMeshProUGUI>();
-        Debug.Log("betValueText: "+ betValueText);
-        if (betValueText != null && int.TryParse(betValueText.text, out int value))
+        selectedBetValue = 0;
+        if (betValueButton != null && int.TryParse(betValueButton.name, out int value))
         {
             selectedBetValue = value;
             Debug.Log($"Bet value set to: {selectedBetValue}");
