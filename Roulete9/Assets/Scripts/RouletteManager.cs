@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using System.Collections;
 using System.Collections.Generic;
+using System.Xml.Serialization;
 
 public class RouletteManager : MonoBehaviour
 {
@@ -28,11 +29,15 @@ public class RouletteManager : MonoBehaviour
 
     void Start()
     {
+      
+    }
+    public void spinTheWheel(int drawnNumber)
+    {
         if (wheelImage != null && ballImage != null && pathPoints.Count > 0)
         {
             // Generate a random index that corresponds to one of the path points
-            int targetIndex = Random.Range(0, pathPoints.Count);
-            targetPoint = pathPoints[targetIndex];
+            //int targetIndex = Random.Range(0, pathPoints.Count);
+            targetPoint.name = drawnNumber.ToString();
 
             // Start the spinning and ball movement coroutines
             StartCoroutine(SpinWheel());
