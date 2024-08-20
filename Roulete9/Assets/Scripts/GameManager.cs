@@ -16,6 +16,7 @@ public class GameManager : MonoBehaviour
 
     private void Awake()
     {
+        Screen.orientation = ScreenOrientation.LandscapeLeft;
         LoadRandomNumbers();
 
         // Subscribe to the events
