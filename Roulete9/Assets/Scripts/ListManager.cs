@@ -5,6 +5,7 @@ using UnityEngine;
 public class ListManager : MonoBehaviour
 {
     [SerializeField] private TMP_Text[] drawnNumberList;
+    [SerializeField] private TMP_Text winningNumber;
 
     public void setNumberToList(List<int> randomNumbers)
     {
@@ -36,5 +37,15 @@ public class ListManager : MonoBehaviour
                 drawnNumberList[i].text = ""; // Clear any extra UI elements
             }
         }
+    }
+    public void disableOrUnable(bool state)
+    {
+        winningNumber.gameObject.SetActive(state);
+    }
+
+    public void displayWinningNumber(int number)
+    {
+        winningNumber.text= number.ToString();
+
     }
 }

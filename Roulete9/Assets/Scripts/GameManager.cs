@@ -7,9 +7,10 @@ public class GameManager : MonoBehaviour
     [SerializeField] private MoveUIElementAfterTimer uiElementMover;
     [SerializeField] private ListManager listManager;
     [SerializeField] private RouletteManager rouletteManager;
+    [SerializeField] private BetManager betManager;
     private List<int> randomNumbers = new List<int>();
     private const int MaxRandomNumbers = 9;
-    private float playAgain = 5f;
+    private float playAgain = 8f;
 
     private const string PlayerPrefsKey = "RandomNumbersList";
 
@@ -32,6 +33,7 @@ public class GameManager : MonoBehaviour
     {
         while (true)
         {
+           
             yield return StartCoroutine(StartGame());
             yield return new WaitForSeconds(playAgain);
         }
@@ -39,6 +41,8 @@ public class GameManager : MonoBehaviour
 
     private IEnumerator StartGame()
     {
+        //betManager.EnableButtons(true);
+        listManager.disableOrUnable(false);
         uiElementMover.SetStartingPosition();
         uiElementMover.SetupTimerText();
 
@@ -56,13 +60,16 @@ public class GameManager : MonoBehaviour
         int randomNumber = Random.Range(0, rouletteManager.pathPoints.Count);
         Debug.Log("Random Number: " + randomNumber);
         AddRandomNumber(randomNumber);
-        listManager.setNumberToList(randomNumbers); // Update the list manager
 
+        //betManager.DisableButtons();
         // Start the roulette wheel spin and ball movement
         rouletteManager.spinTheWheel(randomNumber);
 
         // Wait for the wheel spin to complete
         yield return new WaitForSeconds(rouletteManager.spinDuration);
+        listManager.disableOrUnable(true);
+        listManager.displayWinningNumber(randomNumber);
+        listManager.setNumberToList(randomNumbers); // Update the list manager
 
         // Move the UI element back to the starting position
         uiElementMover.StartMovingBack();

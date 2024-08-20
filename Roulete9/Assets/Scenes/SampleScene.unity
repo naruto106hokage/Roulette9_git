@@ -1918,7 +1918,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 0, y: 87.17798}
   m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &663578424
@@ -5970,6 +5970,7 @@ MonoBehaviour:
   uiElementMover: {fileID: 1856884306}
   listManager: {fileID: 1856884309}
   rouletteManager: {fileID: 1856884310}
+  betManager: {fileID: 1856884308}
 --- !u!114 &1856884308
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -6034,6 +6035,7 @@ MonoBehaviour:
   - {fileID: 179318227}
   - {fileID: 817249966}
   - {fileID: 827816162}
+  winningNumber: {fileID: 851446282}
 --- !u!114 &1856884310
 MonoBehaviour:
   m_ObjectHideFlags: 0

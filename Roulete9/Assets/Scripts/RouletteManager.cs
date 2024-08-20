@@ -16,7 +16,9 @@ public class RouletteManager : MonoBehaviour
     private Vector3 initialBallPosition; // Initial ball position
     private int totalSpins = 3; // Number of spins
 
-    void Awake()
+    public bool IsSpinning { get; private set; } = false; // Property to check if the wheel is spinning
+
+    private void Awake()
     {
         // Set the ball's position to zero on Awake
         if (ballImage != null)
@@ -30,8 +32,8 @@ public class RouletteManager : MonoBehaviour
     {
         if (wheelImage != null && ballImage != null && pathPoints.Count > 0)
         {
-            // Find the target point based on the drawn number
-            targetPoint = pathPoints[drawnNumber % pathPoints.Count]; // Ensure index is within bounds
+            // Generate a target index based on the drawn number
+            targetPoint = pathPoints[Mathf.Clamp(drawnNumber, 0, pathPoints.Count - 1)];
 
             // Start the spinning and ball movement coroutines
             StartCoroutine(SpinWheel());
@@ -41,24 +43,23 @@ public class RouletteManager : MonoBehaviour
 
     private IEnumerator SpinWheel()
     {
+        wheelImage.rectTransform.eulerAngles = Vector3.zero;
+        IsSpinning = true; // Set the spinning flag
         float elapsedTime = 0f;
-        float totalRotation = 360f * totalSpins; // Total rotation angle
 
         while (elapsedTime < spinDuration)
         {
             // Rotate the wheel
-            float rotationAmount = rotationSpeed * Time.deltaTime;
-            wheelImage.rectTransform.Rotate(Vector3.forward, rotationAmount);
+            Vector3 rotation = Vector3.forward * 100 * Time.deltaTime;
+            wheelImage.rectTransform.eulerAngles += rotation;
 
             elapsedTime += Time.deltaTime;
             yield return null;
         }
 
-        // Ensure the wheel stops rotating exactly at the end of the spin duration
-        wheelImage.rectTransform.eulerAngles = new Vector3(0, 0, wheelImage.rectTransform.eulerAngles.z + totalRotation);
-
-        // Optional: Reset rotationSpeed to 0 if needed
+        // Stop the wheel rotation
         rotationSpeed = 0f;
+        IsSpinning = false; // Reset the spinning flag
     }
 
     private IEnumerator MoveBallAlongPath()
