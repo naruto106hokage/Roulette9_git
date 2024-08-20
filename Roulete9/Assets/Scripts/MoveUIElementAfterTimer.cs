@@ -1,37 +1,41 @@
 using UnityEngine;
 using TMPro;
+using System;
 using System.Collections;
 
 public class MoveUIElementAfterTimer : MonoBehaviour
 {
     [SerializeField] private RectTransform uiElementToMove;
-    [SerializeField] private TextMeshProUGUI timerText; // Use TextMeshProUGUI for the timer text
+    [SerializeField] private TextMeshProUGUI timerText;
     [SerializeField] private float startingXPosition = 0f;
     [SerializeField] private float endingXPosition = 550f;
-    [SerializeField] private float timeToWait = 20f; // Time in seconds
-    [SerializeField] private float moveDuration = 1f; // Duration of the move
+    [SerializeField] private float timeToWait = 20f;
+    [SerializeField] private float moveDuration = 1f;
     [SerializeField] private Color startColor = Color.green;
     [SerializeField] private Color endColor = Color.red;
-    [SerializeField] private TMP_FontAsset timerFont; // TextMeshPro font asset
+    [SerializeField] private TMP_FontAsset timerFont;
     [SerializeField] private int timerFontSize = 40;
-    [SerializeField] private float delayBeforeMovingBack = 10f; // Delay before moving back in seconds
+    [SerializeField] private float delayBeforeMovingBack = 10f;
 
-    private float elapsedTime = 0f; // Track the elapsed time
+    private float elapsedTime = 0f;
     private bool isMoving = false;
-    private bool hasMoved = false; // Track if the element has already moved
+    private bool hasMoved = false;
     private float moveStartTime;
-    private bool movingBack = false; // Track if the element is moving back to the start position
+    private bool movingBack = false;
 
-    private void Start()
+    // Event for when the UI element reaches the final position
+    public event Action OnMoveComplete;
+
+    // Event for when the UI element has moved back to the start position
+    public event Action OnMoveBackComplete;
+
+    // Property to check if the UI element has moved
+    public bool HasMoved => hasMoved;
+
+    private void Awake()
     {
-        // Set the UI element to the starting X position at the beginning
         SetStartingPosition();
-
-        // Set up the timer text font and size
         SetupTimerText();
-
-        // Automatically start the timer when the script starts
-        StartTimer();
     }
 
     private void Update()
@@ -46,14 +50,14 @@ public class MoveUIElementAfterTimer : MonoBehaviour
         }
     }
 
-    private void StartTimer()
+    public void StartTimer(float duration)
     {
+        timeToWait = duration; // Set the timer duration
         elapsedTime = 0f;
         hasMoved = false;
         isMoving = false;
         movingBack = false;
 
-        // Update the timer every frame
         StartCoroutine(UpdateTimer());
     }
 
@@ -64,29 +68,25 @@ public class MoveUIElementAfterTimer : MonoBehaviour
             elapsedTime += Time.deltaTime;
             float remainingTime = Mathf.Max(0, timeToWait - elapsedTime);
 
-            // Update the timer text and color transition
             UpdateTimerText(remainingTime);
-
             yield return null;
         }
 
-        // After the timer ends, start the movement
         if (!hasMoved)
         {
             StartMovement();
         }
     }
 
-    private void SetStartingPosition()
+    public void SetStartingPosition()
     {
         if (uiElementToMove != null)
         {
-            Vector2 anchoredPosition = uiElementToMove.anchoredPosition;
-            uiElementToMove.anchoredPosition = new Vector2(startingXPosition, anchoredPosition.y);
+            uiElementToMove.anchoredPosition = new Vector2(startingXPosition, uiElementToMove.anchoredPosition.y);
         }
     }
 
-    private void SetupTimerText()
+    public void SetupTimerText()
     {
         if (timerText != null)
         {
@@ -110,20 +110,19 @@ public class MoveUIElementAfterTimer : MonoBehaviour
         if (uiElementToMove != null)
         {
             float timeSinceMoveStarted = Time.time - moveStartTime;
-            float t = Mathf.Clamp01(timeSinceMoveStarted / moveDuration); // Calculate how far along the movement is
+            float t = Mathf.Clamp01(timeSinceMoveStarted / moveDuration);
 
-            // Interpolate the position between starting and ending positions based on 't'
             float newXPosition = Mathf.Lerp(startingXPosition, endingXPosition, t);
-            Vector2 anchoredPosition = uiElementToMove.anchoredPosition;
-            uiElementToMove.anchoredPosition = new Vector2(newXPosition, anchoredPosition.y);
+            uiElementToMove.anchoredPosition = new Vector2(newXPosition, uiElementToMove.anchoredPosition.y);
 
-            // Stop moving once the target is reached
             if (t >= 1.0f)
             {
                 isMoving = false;
-                hasMoved = true; // Mark that the movement has been completed
+                hasMoved = true;
 
-                // Start moving back after a delay
+                // Trigger the move complete event
+                OnMoveComplete?.Invoke();
+
                 StartCoroutine(DelayedMoveBack());
             }
         }
@@ -131,12 +130,11 @@ public class MoveUIElementAfterTimer : MonoBehaviour
 
     private IEnumerator DelayedMoveBack()
     {
-        // Wait for the specified delay before moving back
         yield return new WaitForSeconds(delayBeforeMovingBack);
         StartMovingBack();
     }
 
-    private void StartMovingBack()
+    public void StartMovingBack()
     {
         if (hasMoved && !movingBack)
         {
@@ -150,18 +148,18 @@ public class MoveUIElementAfterTimer : MonoBehaviour
         if (uiElementToMove != null)
         {
             float timeSinceMoveStarted = Time.time - moveStartTime;
-            float t = Mathf.Clamp01(timeSinceMoveStarted / moveDuration); // Calculate how far along the movement is
+            float t = Mathf.Clamp01(timeSinceMoveStarted / moveDuration);
 
-            // Interpolate the position between ending and starting positions based on 't'
             float newXPosition = Mathf.Lerp(endingXPosition, startingXPosition, t);
-            Vector2 anchoredPosition = uiElementToMove.anchoredPosition;
-            uiElementToMove.anchoredPosition = new Vector2(newXPosition, anchoredPosition.y);
+            uiElementToMove.anchoredPosition = new Vector2(newXPosition, uiElementToMove.anchoredPosition.y);
 
-            // Stop moving once the target is reached
             if (t >= 1.0f)
             {
                 movingBack = false;
-                hasMoved = false; // Reset the movement state
+                hasMoved = false;
+
+                // Trigger the move back complete event
+                OnMoveBackComplete?.Invoke();
             }
         }
     }
@@ -174,10 +172,8 @@ public class MoveUIElementAfterTimer : MonoBehaviour
             int seconds = Mathf.FloorToInt(remainingTime % 60f);
             timerText.text = $"{minutes:00}:{seconds:00}";
 
-            // Update the text color based on the time left
             timerText.color = Color.Lerp(endColor, startColor, remainingTime / timeToWait);
 
-            // Pulse the text as it approaches the end
             if (remainingTime <= 10f)
             {
                 float pulseScale = 1.2f;
@@ -185,23 +181,4 @@ public class MoveUIElementAfterTimer : MonoBehaviour
             }
         }
     }
-
-    public void ResetElement()
-    {
-        // Reset the UI element to the starting position
-        SetStartingPosition();
-
-        // Reset the movement and timer variables
-        elapsedTime = 0f;
-        isMoving = false;
-        hasMoved = false;
-        movingBack = false;
-
-        // Reset the timer text
-        SetupTimerText();
-
-        // Restart the timer
-        StartTimer();
-    }
 }
- 

@@ -4,8 +4,9 @@ using UnityEngine;
 
 public class GameManager : MonoBehaviour
 {
-    [SerializeField] private MoveUIElementAfterTimer uiElementMover; 
-    [SerializeField] private ListManager listManager; 
+    [SerializeField] private MoveUIElementAfterTimer uiElementMover;
+    [SerializeField] private ListManager listManager;
+    [SerializeField] private RouletteManager rouletteManager;
     private List<int> randomNumbers = new List<int>();
     private const int MaxRandomNumbers = 9;
     private float playAgain = 5f;
@@ -15,60 +16,85 @@ public class GameManager : MonoBehaviour
     private void Awake()
     {
         LoadRandomNumbers();
+
+        // Subscribe to the events
+        uiElementMover.OnMoveComplete += HandleMoveComplete;
+        uiElementMover.OnMoveBackComplete += HandleMoveBackComplete;
     }
+
     private void Start()
     {
-        //uiElementMover.StartTimer();
-        // Start the timer when the game starts
         listManager.setNumberToList(randomNumbers);
-        StartCoroutine("RepeatedStartGame");
+        StartCoroutine(RepeatedStartGame());
     }
-    IEnumerator RepeatedStartGame()
+
+    private IEnumerator RepeatedStartGame()
     {
         while (true)
         {
-            yield return StartCoroutine(startGame());
+            yield return StartCoroutine(StartGame());
             yield return new WaitForSeconds(playAgain);
         }
     }
 
-    private IEnumerator startGame()
+    private IEnumerator StartGame()
     {
-        int randomNumber = Random.Range(0, 10);
+        uiElementMover.SetStartingPosition();
+        uiElementMover.SetupTimerText();
+
+        // Set the timer duration and start it
+        float timerDuration = 10f; // Example duration; adjust as needed
+        uiElementMover.StartTimer(timerDuration);
+
+        // Wait for the UI element to move to the end position
+        while (!uiElementMover.HasMoved)
+        {
+            yield return null;
+        }
+
+        // Generate and store a random number
+        int randomNumber = Random.Range(0, rouletteManager.pathPoints.Count);
         Debug.Log("Random Number: " + randomNumber);
         AddRandomNumber(randomNumber);
-        //uiElementMover.StartTimer();
-        yield return null;
+        listManager.setNumberToList(randomNumbers); // Update the list manager
+
+        // Start the roulette wheel spin and ball movement
+        rouletteManager.spinTheWheel(randomNumber);
+
+        // Wait for the wheel spin to complete
+        yield return new WaitForSeconds(rouletteManager.spinDuration);
+
+        // Move the UI element back to the starting position
+        uiElementMover.StartMovingBack();
+
+        // Wait for the UI element to move back to the start position
+        while (uiElementMover.HasMoved)
+        {
+            yield return null;
+        }
+
+        // Restart the timer
+        uiElementMover.StartTimer(timerDuration);
     }
 
-    public void ResetUIElement()
-    {
-        // Reset the UI element and timer
-        uiElementMover.ResetElement();
-    }
-
-    public void TriggerMovementImmediately()
-    {
-        // Trigger the movement immediately without waiting for the timer
-        //uiElementMover.StartMovement();
-    }
-    void AddRandomNumber(int number)
+    private void AddRandomNumber(int number)
     {
         if (randomNumbers.Count >= MaxRandomNumbers)
         {
-            randomNumbers.RemoveAt(0); // Remove the oldest number
+            randomNumbers.RemoveAt(0);
         }
         randomNumbers.Add(number);
         SaveRandomNumbers();
     }
 
-    void SaveRandomNumbers()
+    private void SaveRandomNumbers()
     {
         string json = JsonUtility.ToJson(new Serialization<int>(randomNumbers));
         PlayerPrefs.SetString(PlayerPrefsKey, json);
         PlayerPrefs.Save();
     }
-    void LoadRandomNumbers()
+
+    private void LoadRandomNumbers()
     {
         if (PlayerPrefs.HasKey(PlayerPrefsKey))
         {
@@ -76,21 +102,30 @@ public class GameManager : MonoBehaviour
             randomNumbers = JsonUtility.FromJson<Serialization<int>>(json).ToList();
         }
     }
-}
 
-[System.Serializable]
-public class Serialization<T>
-{
-    public List<T> items;
-
-    public Serialization(List<T> items)
+    private void HandleMoveComplete()
     {
-        this.items = items;
+        Debug.Log("UI Element reached the final position.");
     }
 
-    public List<T> ToList()
+    private void HandleMoveBackComplete()
     {
-        return items;
+        Debug.Log("UI Element moved back to the starting position.");
+    }
+
+    [System.Serializable]
+    public class Serialization<T>
+    {
+        public List<T> items;
+
+        public Serialization(List<T> items)
+        {
+            this.items = items;
+        }
+
+        public List<T> ToList()
+        {
+            return items;
+        }
     }
 }
-

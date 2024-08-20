@@ -2,7 +2,6 @@ using UnityEngine;
 using UnityEngine.UI;
 using System.Collections;
 using System.Collections.Generic;
-using System.Xml.Serialization;
 
 public class RouletteManager : MonoBehaviour
 {
@@ -27,17 +26,12 @@ public class RouletteManager : MonoBehaviour
         }
     }
 
-    void Start()
-    {
-      
-    }
     public void spinTheWheel(int drawnNumber)
     {
         if (wheelImage != null && ballImage != null && pathPoints.Count > 0)
         {
-            // Generate a random index that corresponds to one of the path points
-            //int targetIndex = Random.Range(0, pathPoints.Count);
-            targetPoint.name = drawnNumber.ToString();
+            // Find the target point based on the drawn number
+            targetPoint = pathPoints[drawnNumber % pathPoints.Count]; // Ensure index is within bounds
 
             // Start the spinning and ball movement coroutines
             StartCoroutine(SpinWheel());
@@ -45,25 +39,29 @@ public class RouletteManager : MonoBehaviour
         }
     }
 
-    IEnumerator SpinWheel()
+    private IEnumerator SpinWheel()
     {
         float elapsedTime = 0f;
+        float totalRotation = 360f * totalSpins; // Total rotation angle
 
         while (elapsedTime < spinDuration)
         {
             // Rotate the wheel
-            Vector3 rotation = Vector3.forward * rotationSpeed * Time.deltaTime;
-            wheelImage.rectTransform.eulerAngles += rotation;
+            float rotationAmount = rotationSpeed * Time.deltaTime;
+            wheelImage.rectTransform.Rotate(Vector3.forward, rotationAmount);
 
             elapsedTime += Time.deltaTime;
             yield return null;
         }
 
-        // Stop the wheel rotation (optional)
+        // Ensure the wheel stops rotating exactly at the end of the spin duration
+        wheelImage.rectTransform.eulerAngles = new Vector3(0, 0, wheelImage.rectTransform.eulerAngles.z + totalRotation);
+
+        // Optional: Reset rotationSpeed to 0 if needed
         rotationSpeed = 0f;
     }
 
-    IEnumerator MoveBallAlongPath()
+    private IEnumerator MoveBallAlongPath()
     {
         for (int spin = 0; spin < totalSpins; spin++)
         {
@@ -89,7 +87,7 @@ public class RouletteManager : MonoBehaviour
                 initialBallPosition = currentPathPoint.position;
 
                 // On the last spin, check if the current point's name matches the target point's name
-                if (spin == totalSpins - 1 && currentPathPoint.name == targetPoint.name)
+                if (spin == totalSpins - 1 && currentPathPoint == targetPoint)
                 {
                     // Attach the ball to the target point
                     ballImage.transform.SetParent(currentPathPoint);

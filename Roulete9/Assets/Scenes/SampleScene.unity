@@ -5969,6 +5969,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   uiElementMover: {fileID: 1856884306}
   listManager: {fileID: 1856884309}
+  rouletteManager: {fileID: 1856884310}
 --- !u!114 &1856884308
 MonoBehaviour:
   m_ObjectHideFlags: 0
