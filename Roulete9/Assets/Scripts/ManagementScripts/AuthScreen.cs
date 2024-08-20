@@ -91,13 +91,14 @@ public class AuthScreen : MonoBehaviour
         if (ValidatePhoneNumber(phoneNumberSignUpInputField) && ValidateEmail(emailSignUpInputField))
         {
             loginToDisable.SetActive(false);
-            StartCoroutine(doSignUp());
-            if (PlayerPrefs.GetString("login", "NO") == "YES")
-            {
-                loginPhoneNumber.text = PlayerPrefs.GetString("playerName");
-                loginEmail.text = PlayerPrefs.GetString("playerEmail");
-            }
-            phoneNumberTextField.text = phoneNumberSignUpInputField.text;
+            SceneManager.LoadScene(1);
+            //StartCoroutine(doSignUp());
+            //if (PlayerPrefs.GetString("login", "NO") == "YES")
+            //{
+            //    loginPhoneNumber.text = PlayerPrefs.GetString("playerName");
+            //    loginEmail.text = PlayerPrefs.GetString("playerEmail");
+            //}
+            //phoneNumberTextField.text = phoneNumberSignUpInputField.text;
         }
     }
 
@@ -117,7 +118,8 @@ public class AuthScreen : MonoBehaviour
     {
         if (ValidatePhoneNumber(loginPhoneNumber) && ValidateEmail(loginEmail))
         {
-            StartCoroutine(doLoginVerify());
+            SceneManager.LoadScene(1);
+            //StartCoroutine(doLoginVerify());
         }
     }
 

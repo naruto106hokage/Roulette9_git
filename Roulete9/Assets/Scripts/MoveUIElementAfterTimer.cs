@@ -13,7 +13,7 @@ public class MoveUIElementAfterTimer : MonoBehaviour
     [SerializeField] private float moveDuration = 1f;
     [SerializeField] private Color startColor = Color.green;
     [SerializeField] private Color endColor = Color.red;
-    [SerializeField] private TMP_FontAsset timerFont;
+    [SerializeField] private TMP_FontAsset timerFont; // .otf font will be assigned here in Unity Inspector
     [SerializeField] private int timerFontSize = 40;
     [SerializeField] private float delayBeforeMovingBack = 10f;
 
@@ -23,13 +23,8 @@ public class MoveUIElementAfterTimer : MonoBehaviour
     private float moveStartTime;
     private bool movingBack = false;
 
-    // Event for when the UI element reaches the final position
     public event Action OnMoveComplete;
-
-    // Event for when the UI element has moved back to the start position
     public event Action OnMoveBackComplete;
-
-    // Property to check if the UI element has moved
     public bool HasMoved => hasMoved;
 
     private void Awake()
@@ -52,7 +47,7 @@ public class MoveUIElementAfterTimer : MonoBehaviour
 
     public void StartTimer(float duration)
     {
-        timeToWait = duration; // Set the timer duration
+        timeToWait = duration;
         elapsedTime = 0f;
         hasMoved = false;
         isMoving = false;
@@ -90,7 +85,7 @@ public class MoveUIElementAfterTimer : MonoBehaviour
     {
         if (timerText != null)
         {
-            timerText.font = timerFont;
+            timerText.font = timerFont; // Assign the .otf font here
             timerText.fontSize = timerFontSize;
             timerText.color = startColor;
         }
@@ -120,9 +115,7 @@ public class MoveUIElementAfterTimer : MonoBehaviour
                 isMoving = false;
                 hasMoved = true;
 
-                // Trigger the move complete event
                 OnMoveComplete?.Invoke();
-
                 StartCoroutine(DelayedMoveBack());
             }
         }
@@ -158,7 +151,6 @@ public class MoveUIElementAfterTimer : MonoBehaviour
                 movingBack = false;
                 hasMoved = false;
 
-                // Trigger the move back complete event
                 OnMoveBackComplete?.Invoke();
             }
         }

@@ -10,7 +10,7 @@ public class GameManager : MonoBehaviour
     [SerializeField] private BetManager betManager;
     private List<int> randomNumbers = new List<int>();
     private const int MaxRandomNumbers = 9;
-    private float playAgain = 8f;
+    private float playAgain = 1f;
 
     private const string PlayerPrefsKey = "RandomNumbersList";
 

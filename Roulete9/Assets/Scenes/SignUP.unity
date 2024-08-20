@@ -10349,10 +10349,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cd8829b6d96eba941b8faee46055bf09, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  submitButton: {fileID: 712915792}
-  closeButton: {fileID: 912385993}
-  code: {fileID: 1667413008}
-  errorDisplay: {fileID: 461794764}
 --- !u!1 &1147598517
 GameObject:
   m_ObjectHideFlags: 0
@@ -11303,8 +11299,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8de46794a88baed47a2745a225d3a464, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  authObjectUsed: {fileID: 0}
-  button: {fileID: 0}
 --- !u!1 &1274173591
 GameObject:
   m_ObjectHideFlags: 0
@@ -12032,8 +12026,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8de46794a88baed47a2745a225d3a464, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  authObjectUsed: {fileID: 0}
-  button: {fileID: 0}
 --- !u!1 &1403931107
 GameObject:
   m_ObjectHideFlags: 0
@@ -14666,6 +14658,7 @@ GameObject:
   - component: {fileID: 1726621724}
   - component: {fileID: 1726621726}
   - component: {fileID: 1726621727}
+  - component: {fileID: 1726621730}
   - component: {fileID: 1726621729}
   - component: {fileID: 1726621728}
   m_Layer: 0
@@ -14804,6 +14797,22 @@ MonoBehaviour:
   m_FirstSelected: {fileID: 0}
   m_sendNavigationEvents: 1
   m_DragThreshold: 10
+--- !u!114 &1726621730
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1726621722}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7b76d2072367c30489833acb3475f5d6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  inputField: {fileID: 848130785}
+  otpButton: {fileID: 0}
+  inputLimit: 10
+  manageOtpButton: 0
 --- !u!1 &1733525133
 GameObject:
   m_ObjectHideFlags: 0
@@ -16414,8 +16423,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8de46794a88baed47a2745a225d3a464, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  authObjectUsed: {fileID: 0}
-  button: {fileID: 757764213}
 --- !u!224 &1931680746
 RectTransform:
   m_ObjectHideFlags: 0
