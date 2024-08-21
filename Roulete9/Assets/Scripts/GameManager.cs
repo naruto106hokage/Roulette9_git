@@ -49,7 +49,7 @@ public class GameManager : MonoBehaviour
         uiElementMover.SetupTimerText();
 
         // Set the timer duration and start it
-        float timerDuration = 120f; // Example duration; adjust as needed
+        float timerDuration = 10f; // Example duration; adjust as needed
         uiElementMover.StartTimer(timerDuration);
 
         // Wait for the UI element to move to the end position
