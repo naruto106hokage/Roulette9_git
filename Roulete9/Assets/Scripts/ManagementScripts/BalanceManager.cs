@@ -24,7 +24,10 @@ public class BalanceManager : MonoBehaviour
 
     public string authKey;
     private string baseURL;
-
+    private void Awake()
+    {
+        Screen.orientation = ScreenOrientation.Portrait;
+    }
     void Start()
     {
         if (rechargeScreen)
