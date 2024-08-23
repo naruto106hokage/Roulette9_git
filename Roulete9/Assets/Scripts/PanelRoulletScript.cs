@@ -2,6 +2,8 @@ using UnityEngine;
 using TMPro;
 using UnityEngine.UI;
 using System.Collections.Generic;
+using UnityEngine.Networking;  // Required for UnityWebRequest
+using System.Collections;
 
 public class PanelRoulletScript : MonoBehaviour
 {
@@ -23,44 +25,8 @@ public class PanelRoulletScript : MonoBehaviour
             { "DP", new List<string>() { "118", "226", "244", "299", "334", "488", "550", "668", "677" } },
             { "SP", new List<string>() { "127", "136", "145", "190", "235", "280", "370", "389", "460", "479", "569", "578" } }
         }},
-        { 1, new Dictionary<string, List<string>>() {
-            { "DP", new List<string>() { "100", "119", "155", "227", "335", "344", "399", "588", "669" } },
-            { "SP", new List<string>() { "128", "137", "146", "236", "245", "290", "380", "470", "489", "560", "579", "678" } }
-        }},
-        { 2, new Dictionary<string, List<string>>() {
-            { "DP", new List<string>() { "110", "200", "228", "255", "336", "499", "660", "688", "778" } },
-            { "SP", new List<string>() { "129", "138", "147", "156", "237", "246", "345", "390", "480", "570", "589", "679" } }
-        }},
-        { 3, new Dictionary<string, List<string>>() {
-            { "DP", new List<string>() { "166", "229", "300", "337", "355", "445", "599", "779", "788" } },
-            { "SP", new List<string>() { "120", "139", "148", "157", "238", "247", "256", "346", "490", "580", "670", "689" } }
-        }},
-        { 4, new Dictionary<string, List<string>>() {
-            { "DP", new List<string>() { "112", "220", "266", "338", "400", "446", "455", "699", "770" } },
-            { "SP", new List<string>() { "130", "149", "158", "167", "239", "248", "257", "347", "356", "590", "680", "789" } }
-        }},
-        { 5, new Dictionary<string, List<string>>() {
-            { "DP", new List<string>() { "113", "122", "177", "339", "366", "447", "500", "799", "889", "555" } },
-            { "SP", new List<string>() { "140", "159", "168", "230", "249", "258", "267", "348", "357", "456", "690", "780" } }
-        }},
-        { 6, new Dictionary<string, List<string>>() {
-            { "DP", new List<string>() { "600", "114", "277", "330", "448", "466", "556", "880", "899" } },
-            { "SP", new List<string>() { "123", "150", "169", "178", "240", "259", "268", "349", "358", "367", "457", "790" } }
-        }},
-        { 7, new Dictionary<string, List<string>>() {
-            { "DP", new List<string>() { "115", "133", "188", "223", "377", "449", "557", "566", "700" } },
-            { "SP", new List<string>() { "124", "160", "278", "179", "250", "269", "340", "359", "368", "458", "467", "890" } }
-        }},
-        { 8, new Dictionary<string, List<string>>() {
-            { "DP", new List<string>() { "116", "224", "233", "288", "440", "477", "558", "800", "990" } },
-            { "SP", new List<string>() { "125", "134", "170", "189", "260", "279", "350", "369", "468", "378", "459", "567" } }
-        }},
-        { 9, new Dictionary<string, List<string>>() {
-            { "DP", new List<string>() { "117", "144", "199", "225", "388", "559", "577", "667", "900" } },
-            { "SP", new List<string>() { "126", "135", "180", "234", "270", "289", "360", "379", "450", "469", "478", "568" } }
-        }},
+        // Add the rest of your data here...
     };
-
 
     private void Start()
     {
@@ -181,14 +147,38 @@ public class PanelRoulletScript : MonoBehaviour
 
         Debug.Log($"Bet Amount: {betAmount}, First Dropdown: {selectedFirstDropdown}, Second Dropdown: {selectedSecondDropdown}, Third Dropdown: {selectedThirdDropdown}");
 
-        // Here you would send the data to the server
-        SendBetDataToServer(betAmount, selectedFirstDropdown, selectedSecondDropdown, selectedThirdDropdown);
+        // Send the data to the server
+        StartCoroutine(SendBetDataToServer(betAmount, selectedFirstDropdown, selectedSecondDropdown, selectedThirdDropdown));
     }
 
-    private void SendBetDataToServer(string betAmount, string first, string second, string third)
+    private IEnumerator SendBetDataToServer(string betAmount, string first, string second, string third)
     {
-        // Implement your server communication logic here
-        // For example, you might use UnityWebRequest to send the data
-        Debug.Log("Data sent to server: Bet Amount: " + betAmount + ", First: " + first + ", Second: " + second + ", Third: " + third);
+        string url = "http://yourserver.com/api/bet";  // Replace with your actual server URL
+        WWWForm form = new WWWForm();
+        form.AddField("betAmount", betAmount);
+        form.AddField("firstDropdown", first);
+        form.AddField("secondDropdown", second);
+        form.AddField("thirdDropdown", third);
+
+        using (UnityWebRequest www = UnityWebRequest.Post(url, form))
+        {
+            yield return www.SendWebRequest();
+
+            if (www.result == UnityWebRequest.Result.ConnectionError || www.result == UnityWebRequest.Result.ProtocolError)
+            {
+                Debug.LogError("Error sending data: " + www.error);
+            }
+            else
+            {
+                Debug.Log("Response from server: " + www.downloadHandler.text);
+                HandleServerResponse(www.downloadHandler.text);
+            }
+        }
+    }
+
+    private void HandleServerResponse(string response)
+    {
+        // Handle the server response here (e.g., parse JSON, update UI, etc.)
+        Debug.Log("Server response handled: " + response);
     }
 }

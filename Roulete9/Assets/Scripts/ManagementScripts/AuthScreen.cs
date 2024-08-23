@@ -6,6 +6,7 @@ using UnityEngine.Networking;
 using System.Collections;
 using Newtonsoft.Json.Linq;
 using UnityEngine.SceneManagement;
+using System.Collections.Generic;
 
 public class AuthScreen : MonoBehaviour
 {
@@ -36,7 +37,7 @@ public class AuthScreen : MonoBehaviour
     public GameObject errorPrefab;
     public TMP_Text errorText;
 
-    private string baseURL = "http://127.0.0.1:8000";
+    private List<string> errorMessages = new List<string>();
 
     private void Awake()
     {
@@ -131,9 +132,9 @@ public class AuthScreen : MonoBehaviour
 
             if (request.result != UnityWebRequest.Result.Success)
             {
-                Debug.Log(request.error);
-                errorPrefab.SetActive(true);
-                errorText.text = "Sign up failed. Please try again.";
+                AddError($"Sign up error: {request.error} (Response Code: {request.responseCode})");
+                AddError($"Response: {request.downloadHandler.text}");
+                ShowErrors();
             }
             else
             {
@@ -154,21 +155,24 @@ public class AuthScreen : MonoBehaviour
         WWWForm form = new WWWForm();
         form.AddField("phone_number", loginPhoneNumber.text);
 
+        Debug.Log($"Sending Login Data: Phone Number: {loginPhoneNumber.text}");
+
         using (UnityWebRequest request = UnityWebRequest.Post(url, form))
         {
             yield return request.SendWebRequest();
 
             if (request.result != UnityWebRequest.Result.Success)
             {
-                Debug.Log(request.error);
-                errorPrefab.SetActive(true);
-                errorText.text = "Login failed. Please try again.";
+                AddError($"Login error: {request.error} (Response Code: {request.responseCode})");
+                AddError($"Response: {request.downloadHandler.text}");
+                ShowErrors();
             }
             else
             {
-                Debug.Log(request.downloadHandler.text);
+                Debug.Log($"Success: {request.downloadHandler.text}");
                 ShowOtpScreen();
-                PlayerPrefs.SetString("PlayerNumber", loginPhoneNumber.text);
+                PlayerPrefs.SetString("PhoneNumber", loginPhoneNumber.text);
+                OtpPhoneNumber.text = loginPhoneNumber.text;
             }
         }
     }
@@ -178,7 +182,7 @@ public class AuthScreen : MonoBehaviour
         string url = "https://utlnews.com/roulette/api/player/verifyOtp";
 
         WWWForm form = new WWWForm();
-        form.AddField("phone_number", PlayerPrefs.GetString("PlayerNumber"));
+        form.AddField("phone_number", PlayerPrefs.GetString("PhoneNumber"));
         form.AddField("verify_otp", otpInputField.text);
 
         using (UnityWebRequest request = UnityWebRequest.Post(url, form))
@@ -187,15 +191,15 @@ public class AuthScreen : MonoBehaviour
 
             if (request.result != UnityWebRequest.Result.Success)
             {
-                Debug.Log(request.error);
-                errorPrefab.SetActive(true);
-                errorText.text = "OTP verification failed. Please try again.";
+                AddError($"OTP verification error: {request.error} (Response Code: {request.responseCode})");
+                AddError($"Response: {request.downloadHandler.text}");
+                ShowErrors();
             }
             else
             {
                 Debug.Log(request.downloadHandler.text);
                 JObject jsonResponse = JObject.Parse(request.downloadHandler.text);
-                string authKey = jsonResponse["authKey"].ToString();
+                string authKey = jsonResponse["token"].ToString();
                 PlayerPrefs.SetString("authKey", authKey);
                 PlayerPrefs.SetString("login", "YES");
                 SceneManager.LoadScene(1);
@@ -250,5 +254,19 @@ public class AuthScreen : MonoBehaviour
         sendOtpButton.interactable = ValidatePhoneNumber(phoneNumberSignUpInputField) && ValidateEmail(emailSignUpInputField);
         verifyOtpButton.interactable = ValidateOTP();
         verifyLoginButton.interactable = ValidatePhoneNumber(loginPhoneNumber);
+    }
+
+    // Method to add an error message to the list
+    private void AddError(string message)
+    {
+        errorMessages.Add(message);
+    }
+
+    // Method to display all errors
+    private void ShowErrors()
+    {
+        errorPrefab.SetActive(true);
+        errorText.text = string.Join("\n", errorMessages);
+        errorMessages.Clear();
     }
 }
