@@ -4,10 +4,8 @@ using TMPro;
 using System.Text.RegularExpressions;
 using UnityEngine.Networking;
 using System.Collections;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using UnityEngine.SceneManagement;
-using System.Text;
 
 public class AuthScreen : MonoBehaviour
 {
@@ -39,10 +37,12 @@ public class AuthScreen : MonoBehaviour
     public TMP_Text errorText;
 
     private string baseURL = "http://127.0.0.1:8000";
+
     private void Awake()
     {
         Screen.orientation = ScreenOrientation.Portrait;
     }
+
     private void Start()
     {
         StartCoroutine(AutoLogin());
@@ -91,14 +91,7 @@ public class AuthScreen : MonoBehaviour
         if (ValidatePhoneNumber(phoneNumberSignUpInputField) && ValidateEmail(emailSignUpInputField))
         {
             loginToDisable.SetActive(false);
-            SceneManager.LoadScene(1);
-            //StartCoroutine(doSignUp());
-            //if (PlayerPrefs.GetString("login", "NO") == "YES")
-            //{
-            //    loginPhoneNumber.text = PlayerPrefs.GetString("playerName");
-            //    loginEmail.text = PlayerPrefs.GetString("playerEmail");
-            //}
-            //phoneNumberTextField.text = phoneNumberSignUpInputField.text;
+            StartCoroutine(doSignUp());
         }
     }
 
@@ -116,179 +109,94 @@ public class AuthScreen : MonoBehaviour
 
     public void OnVerifyLoginButtonClick()
     {
-        if (ValidatePhoneNumber(loginPhoneNumber) && ValidateEmail(loginEmail))
+        if (ValidatePhoneNumber(loginPhoneNumber))
         {
-            SceneManager.LoadScene(1);
-            //StartCoroutine(doLoginVerify());
+            StartCoroutine(doLoginVerify());
         }
     }
 
     private IEnumerator doSignUp()
     {
-        string url = baseURL + "api/signup";
+        string url = "https://utlnews.com/roulette/api/player/signup";
 
-        // Create a payload object
-        var payload = new SignUpPayload
+        WWWForm form = new WWWForm();
+        form.AddField("name", username.text);
+        form.AddField("phone_number", phoneNumberSignUpInputField.text);
+
+        using (UnityWebRequest request = UnityWebRequest.Post(url, form))
         {
-            email = emailSignUpInputField.text,
-            PhoneNumber = phoneNumberSignUpInputField.text,
-            username = username.text,
-            Password = password.text,
-            deviceID = SystemInfo.deviceUniqueIdentifier
-        };
-
-        string jsonPayload = JsonConvert.SerializeObject(payload);
-
-        using (UnityWebRequest request = new UnityWebRequest(url, UnityWebRequest.kHttpVerbPOST))
-        {
-            byte[] bodyRaw = Encoding.UTF8.GetBytes(jsonPayload);
-            request.uploadHandler = new UploadHandlerRaw(bodyRaw);
-            request.downloadHandler = new DownloadHandlerBuffer();
-            request.SetRequestHeader("Content-Type", "application/json");
             request.SetRequestHeader("Accept", "application/json");
 
             yield return request.SendWebRequest();
 
-            if (request.isNetworkError || request.isHttpError)
+            if (request.result != UnityWebRequest.Result.Success)
             {
                 Debug.Log(request.error);
                 errorPrefab.SetActive(true);
-                errorText.text = "User already exists, please enter a different number and email";
+                errorText.text = "Sign up failed. Please try again.";
             }
             else
             {
-                JObject jsonNode = JObject.Parse(request.downloadHandler.text);
-                if (jsonNode["notice"] != null && jsonNode["notice"].ToString() == "User Successfully Created !")
-                {
-                    Debug.Log("User Successfully Created");
-                    PlayerPrefs.SetString("PID", jsonNode["playerid"].ToString());
-                    PlayerPrefs.SetString("PlayerNumber", phoneNumberSignUpInputField.text);
-                    PlayerPrefs.SetString("playerName", username.text);
-                    PlayerPrefs.SetString("playerEmail", emailSignUpInputField.text);
-                    PlayerPrefs.SetString("userToken", jsonNode["token"].ToString());
-                    PlayerPrefs.SetString("login", "YES");
-                    SceneManager.LoadScene(1);
-                }
-                else
-                {
-                    Debug.Log(jsonNode["notice"].ToString());
-                }
+                Debug.Log(request.downloadHandler.text);
+                JObject jsonResponse = JObject.Parse(request.downloadHandler.text);
+                string authKey = jsonResponse["authKey"].ToString();
+                PlayerPrefs.SetString("authKey", authKey);
+                PlayerPrefs.SetString("login", "YES");
+                SceneManager.LoadScene(1);
             }
         }
     }
 
     private IEnumerator doLoginVerify()
     {
-        string url = baseURL + "api/signin-player";
+        string url = "https://utlnews.com/roulette/api/player/login";
 
-        // Create a payload object
-        var payload = new LoginPayload
+        WWWForm form = new WWWForm();
+        form.AddField("phone_number", loginPhoneNumber.text);
+
+        using (UnityWebRequest request = UnityWebRequest.Post(url, form))
         {
-            email = loginEmail.text,
-            phone = loginPhoneNumber.text
-        };
-
-        string jsonPayload = JsonConvert.SerializeObject(payload);
-
-        using (UnityWebRequest request = new UnityWebRequest(url, UnityWebRequest.kHttpVerbPOST))
-        {
-            byte[] bodyRaw = Encoding.UTF8.GetBytes(jsonPayload);
-            request.uploadHandler = new UploadHandlerRaw(bodyRaw);
-            request.downloadHandler = new DownloadHandlerBuffer();
-            request.SetRequestHeader("Content-Type", "application/json");
-            request.SetRequestHeader("Accept", "application/json");
-
             yield return request.SendWebRequest();
 
-            if (request.isNetworkError || request.isHttpError)
+            if (request.result != UnityWebRequest.Result.Success)
             {
                 Debug.Log(request.error);
+                errorPrefab.SetActive(true);
+                errorText.text = "Login failed. Please try again.";
             }
             else
             {
-                JObject jsonNode = JObject.Parse(request.downloadHandler.text);
-                if (jsonNode["success"] != null && (bool)jsonNode["success"])
-                {
-                    Debug.Log(jsonNode["message"].ToString());
-                    ShowOtpScreen();
-                    PlayerPrefs.SetString("PlayerNumber", loginPhoneNumber.text);
-                }
-                else
-                {
-                    Debug.Log(jsonNode["message"].ToString());
-                    errorPrefab.SetActive(true);
-                    errorText.text = jsonNode["message"].ToString();
-                }
+                Debug.Log(request.downloadHandler.text);
+                ShowOtpScreen();
+                PlayerPrefs.SetString("PlayerNumber", loginPhoneNumber.text);
             }
         }
     }
 
     private IEnumerator doVerifyOtp()
     {
-        string url = baseURL + "api/otp-verify";
+        string url = "https://utlnews.com/roulette/api/player/verifyOtp";
 
-        // Create a payload object
-        var payload = new OtpPayload
+        WWWForm form = new WWWForm();
+        form.AddField("phone_number", PlayerPrefs.GetString("PlayerNumber"));
+        form.AddField("verify_otp", otpInputField.text);
+
+        using (UnityWebRequest request = UnityWebRequest.Post(url, form))
         {
-            otp = otpInputField.text,
-            phone = PlayerPrefs.GetString("PlayerNumber")
-        };
-
-        string jsonPayload = JsonConvert.SerializeObject(payload);
-
-        using (UnityWebRequest request = new UnityWebRequest(url, UnityWebRequest.kHttpVerbPOST))
-        {
-            byte[] bodyRaw = Encoding.UTF8.GetBytes(jsonPayload);
-            request.uploadHandler = new UploadHandlerRaw(bodyRaw);
-            request.downloadHandler = new DownloadHandlerBuffer();
-            request.SetRequestHeader("Content-Type", "application/json");
-            request.SetRequestHeader("Accept", "application/json");
-
             yield return request.SendWebRequest();
 
-            if (request.isNetworkError || request.isHttpError)
+            if (request.result != UnityWebRequest.Result.Success)
             {
                 Debug.Log(request.error);
+                errorPrefab.SetActive(true);
+                errorText.text = "OTP verification failed. Please try again.";
             }
             else
             {
-                JObject jsonNode = JObject.Parse(request.downloadHandler.text);
-                if (jsonNode["success"] != null && (bool)jsonNode["success"])
-                {
-                    Debug.Log(jsonNode["message"].ToString());
-                    Debug.Log("User Successfully Verified");
-                    PlayerPrefs.SetString("PID", jsonNode["playerid"].ToString());
-                    PlayerPrefs.SetString("playerName", jsonNode["username"].ToString());
-                    PlayerPrefs.SetString("playerEmail", jsonNode["email"].ToString());
-                    PlayerPrefs.SetString("userToken", jsonNode["token"].ToString());
-                    PlayerPrefs.SetString("login", "YES");
-                    SceneManager.LoadScene(1);
-                }
-                else
-                {
-                    Debug.Log(jsonNode["message"].ToString());
-                    errorPrefab.SetActive(true);
-                    errorText.text = jsonNode["message"].ToString();
-                }
-            }
-        }
-    }
-
-    internal int signalForAppVersion = 0;
-    private int recursionCheck = 0;
-
-    public void Lobby()
-    {
-        print("yesaa");
-        if (signalForAppVersion == 0)
-        {
-            recursionCheck++;
-            Invoke("Lobby", 0.5f);
-        }
-        else
-        {
-            if (signalForAppVersion == 1)
-            {
+                Debug.Log(request.downloadHandler.text);
+                JObject jsonResponse = JObject.Parse(request.downloadHandler.text);
+                string authKey = jsonResponse["authKey"].ToString();
+                PlayerPrefs.SetString("authKey", authKey);
                 PlayerPrefs.SetString("login", "YES");
                 SceneManager.LoadScene(1);
             }
@@ -341,27 +249,6 @@ public class AuthScreen : MonoBehaviour
     {
         sendOtpButton.interactable = ValidatePhoneNumber(phoneNumberSignUpInputField) && ValidateEmail(emailSignUpInputField);
         verifyOtpButton.interactable = ValidateOTP();
-        verifyLoginButton.interactable = ValidatePhoneNumber(loginPhoneNumber) && ValidateEmail(loginEmail);
+        verifyLoginButton.interactable = ValidatePhoneNumber(loginPhoneNumber);
     }
-}
-
-public class SignUpPayload
-{
-    public string email { get; set; }
-    public string PhoneNumber { get; set; }
-    public string username { get; set; }
-    public string Password { get; set; }
-    public string deviceID { get; set; }
-}
-
-public class LoginPayload
-{
-    public string email { get; set; }
-    public string phone { get; set; }
-}
-
-public class OtpPayload
-{
-    public string otp { get; set; }
-    public string phone { get; set; }
 }

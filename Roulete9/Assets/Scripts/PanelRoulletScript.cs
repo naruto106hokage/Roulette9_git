@@ -8,6 +8,8 @@ public class PanelRoulletScript : MonoBehaviour
     public TMP_Dropdown firstDropdown;  // Dropdown for values 0-9
     public TMP_Dropdown secondDropdown; // Dropdown for "SP" or "DP"
     public TMP_Dropdown thirdDropdown;  // Dropdown for numbers based on table
+    public TMP_InputField betAmountInput;  // Input field for bet amount
+    public Button submitButton;  // Button to send the response to the server
 
     public TMP_FontAsset customFont;  // Assign a custom font asset in the Inspector
     public Color normalTextColor = Color.white;  // Normal text color
@@ -59,6 +61,7 @@ public class PanelRoulletScript : MonoBehaviour
         }},
     };
 
+
     private void Start()
     {
         ApplyCustomStyle(firstDropdown);
@@ -68,6 +71,9 @@ public class PanelRoulletScript : MonoBehaviour
         PopulateFirstDropdown();
         firstDropdown.onValueChanged.AddListener(delegate { OnFirstDropdownValueChanged(); });
         secondDropdown.onValueChanged.AddListener(delegate { OnSecondDropdownValueChanged(); });
+
+        // Add listener for the submit button
+        submitButton.onClick.AddListener(OnSubmitButtonClicked);
     }
 
     private void PopulateFirstDropdown()
@@ -116,22 +122,18 @@ public class PanelRoulletScript : MonoBehaviour
 
     private void ApplyCustomStyle(TMP_Dropdown dropdown)
     {
-        // Set the font asset
         dropdown.captionText.font = customFont;
         dropdown.itemText.font = customFont;
 
-        // Set text colors
         dropdown.captionText.color = normalTextColor;
         dropdown.itemText.color = normalTextColor;
 
-        // Set background color for the dropdown
         Image dropdownImage = dropdown.GetComponent<Image>();
         if (dropdownImage != null)
         {
             dropdownImage.color = dropdownBackgroundColor;
         }
 
-        // Set the background color for each dropdown item
         Transform template = dropdown.transform.Find("Template");
         if (template != null)
         {
@@ -147,16 +149,15 @@ public class PanelRoulletScript : MonoBehaviour
                 Image itemBackground = item.GetComponent<Image>();
                 if (itemBackground != null)
                 {
-                    itemBackground.color = dropdownBackgroundColor; // Set item background color
+                    itemBackground.color = dropdownBackgroundColor;
                 }
 
                 TMP_Text itemText = item.Find("Item Label").GetComponent<TMP_Text>();
                 if (itemText != null)
                 {
-                    itemText.color = normalTextColor; // Set normal text color
+                    itemText.color = normalTextColor;
                 }
 
-                // Change highlighted text color
                 Toggle toggle = item.GetComponent<Toggle>();
                 if (toggle != null)
                 {
@@ -168,8 +169,26 @@ public class PanelRoulletScript : MonoBehaviour
             }
         }
 
-        // Adjust padding for better spacing
         dropdown.captionText.margin = new Vector4(dropdownPadding.x, dropdownPadding.y, dropdownPadding.x, dropdownPadding.y);
     }
 
+    private void OnSubmitButtonClicked()
+    {
+        string betAmount = betAmountInput.text;
+        string selectedFirstDropdown = firstDropdown.options[firstDropdown.value].text;
+        string selectedSecondDropdown = secondDropdown.options[secondDropdown.value].text;
+        string selectedThirdDropdown = thirdDropdown.options.Count > 0 ? thirdDropdown.options[thirdDropdown.value].text : "None";
+
+        Debug.Log($"Bet Amount: {betAmount}, First Dropdown: {selectedFirstDropdown}, Second Dropdown: {selectedSecondDropdown}, Third Dropdown: {selectedThirdDropdown}");
+
+        // Here you would send the data to the server
+        SendBetDataToServer(betAmount, selectedFirstDropdown, selectedSecondDropdown, selectedThirdDropdown);
+    }
+
+    private void SendBetDataToServer(string betAmount, string first, string second, string third)
+    {
+        // Implement your server communication logic here
+        // For example, you might use UnityWebRequest to send the data
+        Debug.Log("Data sent to server: Bet Amount: " + betAmount + ", First: " + first + ", Second: " + second + ", Third: " + third);
+    }
 }
