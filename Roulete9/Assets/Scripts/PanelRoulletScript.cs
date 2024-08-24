@@ -4,6 +4,7 @@ using UnityEngine.UI;
 using System.Collections.Generic;
 using UnityEngine.Networking;  // Required for UnityWebRequest
 using System.Collections;
+using System.Linq;
 
 public class PanelRoulletScript : MonoBehaviour
 {
@@ -19,6 +20,10 @@ public class PanelRoulletScript : MonoBehaviour
     public Color dropdownBackgroundColor = new Color(0, 0, 0, 0.5f);  // Semi-transparent background
     public Vector2 dropdownPadding = new Vector2(10, 10);  // Padding for dropdown items
 
+    [SerializeField] private TMP_Text panelNumber;
+
+    public GameObject panelRoulette;
+    public Button enableButton;
     private Dictionary<int, Dictionary<string, List<string>>> panelData = new Dictionary<int, Dictionary<string, List<string>>>()
     {
         { 0, new Dictionary<string, List<string>>() {
@@ -63,7 +68,6 @@ public class PanelRoulletScript : MonoBehaviour
         }},
     };
 
-
     private void Start()
     {
         ApplyCustomStyle(firstDropdown);
@@ -71,6 +75,12 @@ public class PanelRoulletScript : MonoBehaviour
         ApplyCustomStyle(thirdDropdown);
 
         PopulateFirstDropdown();
+
+        // Initially, only the first dropdown is active
+        firstDropdown.gameObject.SetActive(true);
+        secondDropdown.gameObject.SetActive(false);
+        thirdDropdown.gameObject.SetActive(false);
+
         firstDropdown.onValueChanged.AddListener(delegate { OnFirstDropdownValueChanged(); });
         secondDropdown.onValueChanged.AddListener(delegate { OnSecondDropdownValueChanged(); });
 
@@ -93,8 +103,13 @@ public class PanelRoulletScript : MonoBehaviour
 
     private void OnFirstDropdownValueChanged()
     {
-        PopulateSecondDropdown();
-        thirdDropdown.ClearOptions(); // Clear third dropdown when first dropdown changes
+        if (firstDropdown.value > 0)  // Ensure a valid selection
+        {
+            secondDropdown.gameObject.SetActive(true);
+            PopulateSecondDropdown();
+        }
+
+        thirdDropdown.gameObject.SetActive(false); // Hide third dropdown when first dropdown changes
     }
 
     private void PopulateSecondDropdown()
@@ -106,7 +121,11 @@ public class PanelRoulletScript : MonoBehaviour
 
     private void OnSecondDropdownValueChanged()
     {
-        PopulateThirdDropdown();
+        if (secondDropdown.value > 0)  // Ensure a valid selection
+        {
+            thirdDropdown.gameObject.SetActive(true);
+            PopulateThirdDropdown();
+        }
     }
 
     private void PopulateThirdDropdown()
@@ -212,9 +231,66 @@ public class PanelRoulletScript : MonoBehaviour
         }
     }
 
+    public void SelectRandomValueBasedOnNumber(int number)
+    {
+        // Ensure the number is within the valid range and exists in panelData
+        if (panelData.ContainsKey(number))
+        {
+            // Randomly select "DP" or "SP"
+            string[] dpOrSpOptions = new string[] { "DP", "SP" };
+            string selectedOption = dpOrSpOptions[Random.Range(0, dpOrSpOptions.Length)];
+
+            // Get the list of values for the selected option and number
+            List<string> valuesList = panelData[number][selectedOption];
+
+            if (valuesList.Count > 0)
+            {
+                // Randomly select a value from the list
+                string selectedValue = valuesList[Random.Range(0, valuesList.Count)];
+
+                // Output the selected DP/SP and value
+                Debug.Log($"Selected: {selectedOption}, Value: {selectedValue}");
+                panelNumber.text = selectedValue;
+            }
+            else
+            {
+                Debug.LogWarning($"No values found for number {number} and option {selectedOption}");
+            }
+        }
+        else
+        {
+            Debug.LogError($"Invalid number provided: {number}. Must be between 0 and 9 and exist in the panelData.");
+        }
+    }
+
+    public void acitvateOrDeactivatePanelText(bool activate)
+    {
+        panelNumber.gameObject.SetActive(activate);
+    }
+
     private void HandleServerResponse(string response)
     {
         // Handle the server response here (e.g., parse JSON, update UI, etc.)
         Debug.Log("Server response handled: " + response);
     }
+    public void DisablePanelAndButton()
+    {
+        if (panelRoulette != null)
+        {
+            panelRoulette.SetActive(false);
+        }
+
+        if (enableButton != null)
+        {
+            enableButton.interactable = false;  // Disable the button
+        }
+    }
+    public void enablePanelButton()
+    {
+        if (enableButton != null)
+        {
+            enableButton.interactable = true;  // Enable the button
+        }
+    }
+
 }

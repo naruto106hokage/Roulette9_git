@@ -89,7 +89,7 @@ public class AuthScreen : MonoBehaviour
 
     public void OnSendOtpButtonClick()
     {
-        if (ValidatePhoneNumber(phoneNumberSignUpInputField) && ValidateEmail(emailSignUpInputField))
+        if (ValidatePhoneNumber(phoneNumberSignUpInputField))
         {
             loginToDisable.SetActive(false);
             StartCoroutine(doSignUp());
@@ -140,7 +140,7 @@ public class AuthScreen : MonoBehaviour
             {
                 Debug.Log(request.downloadHandler.text);
                 JObject jsonResponse = JObject.Parse(request.downloadHandler.text);
-                string authKey = jsonResponse["authKey"].ToString();
+                string authKey = jsonResponse["token"].ToString();
                 PlayerPrefs.SetString("authKey", authKey);
                 PlayerPrefs.SetString("login", "YES");
                 SceneManager.LoadScene(1);
@@ -199,7 +199,7 @@ public class AuthScreen : MonoBehaviour
             {
                 Debug.Log(request.downloadHandler.text);
                 JObject jsonResponse = JObject.Parse(request.downloadHandler.text);
-                string authKey = jsonResponse["token"].ToString();
+                string authKey = jsonResponse["access_token"].ToString();
                 PlayerPrefs.SetString("authKey", authKey);
                 PlayerPrefs.SetString("login", "YES");
                 SceneManager.LoadScene(1);
@@ -245,13 +245,13 @@ public class AuthScreen : MonoBehaviour
     private bool ValidateOTP()
     {
         string otp = otpInputField.text;
-        string pattern = @"^\d{6}$";
+        string pattern = @"^\d{4}$";
         return Regex.IsMatch(otp, pattern);
     }
 
     private void CheckInputs()
     {
-        sendOtpButton.interactable = ValidatePhoneNumber(phoneNumberSignUpInputField) && ValidateEmail(emailSignUpInputField);
+        sendOtpButton.interactable = ValidatePhoneNumber(phoneNumberSignUpInputField);
         verifyOtpButton.interactable = ValidateOTP();
         verifyLoginButton.interactable = ValidatePhoneNumber(loginPhoneNumber);
     }

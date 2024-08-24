@@ -17,6 +17,7 @@ public class BetManager : MonoBehaviour
     [SerializeField] private Button clearBet;
     [SerializeField] private Button doubleBet;
     [SerializeField] private Button removeBetButton; // Button to activate delete mode
+    [SerializeField] private GameObject notice; // Button to activate delete mode
 
     private int selectedBetValue = 0;
     private bool isDeleteModeActive = false;
@@ -108,6 +109,7 @@ public class BetManager : MonoBehaviour
 
         if (selectedBetValue == 0)
         {
+            activateNotice();
             Debug.LogWarning("No bet value selected.");
             return;
         }
@@ -201,7 +203,15 @@ public class BetManager : MonoBehaviour
         UpdateBets(buttonName, selectedBetValue);
         UpdateTotalBetValue();
     }
-
+    private void activateNotice()
+    {
+        notice.SetActive(true);
+        Invoke("deactivateNotice", 1.5f);
+    }
+    private void deactivateNotice()
+    {
+        notice.SetActive(false);
+    }
     private bool IsValidSingleNumberButton(string buttonName)
     {
         if (int.TryParse(buttonName, out int number))
@@ -429,6 +439,23 @@ public class BetManager : MonoBehaviour
         {
             Debug.Log($"Sending bet: Position - {bet.Key}, Value - {bet.Value}");
         }
+    }
+    public void DeactivateAllImages()
+    {
+        foreach (GameObject img in imagesToActivate)
+        {
+            if (img != null)
+            {
+                img.SetActive(false);
+            }
+        }
+
+        // Optionally clear the dictionaries if deactivation means the bets are also cleared
+        positionOfBetPlaced.Clear();
+        betsPlaced.Clear();
+
+        // Update the UI after deactivation
+        //UpdateTotalBetValue();
     }
 
 }

@@ -8,6 +8,7 @@ public class GameManager : MonoBehaviour
     [SerializeField] private ListManager listManager;
     [SerializeField] private RouletteManager rouletteManager;
     [SerializeField] private BetManager betManager;
+    [SerializeField] private PanelRoulletScript panelRoulletScript;
     private List<int> randomNumbers = new List<int>();
     private const int MaxRandomNumbers = 9;
     private float playAgain = 1f;
@@ -45,12 +46,15 @@ public class GameManager : MonoBehaviour
     {
         betManager.EnableButtons(true);
         listManager.disableOrUnable(false);
+        panelRoulletScript.acitvateOrDeactivatePanelText(false);
         betManager.DestroyAllImages();
+        rouletteManager.deactivateImage();
         uiElementMover.SetStartingPosition();
         uiElementMover.SetupTimerText();
+        panelRoulletScript.enablePanelButton();
 
         // Set the timer duration and start it
-        float timerDuration = 10f; // Example duration; adjust as needed
+        float timerDuration = 120f; // Example duration; adjust as needed
         uiElementMover.StartTimer(timerDuration);
 
         // Wait for the UI element to move to the end position
@@ -66,13 +70,17 @@ public class GameManager : MonoBehaviour
 
         betManager.DisableButtons();
         betManager.SendBetsToServer();
+        panelRoulletScript.DisablePanelAndButton();
+        betManager.DeactivateAllImages();
         // Start the roulette wheel spin and ball movement
         rouletteManager.spinTheWheel(randomNumber);
 
         // Wait for the wheel spin to complete
-        yield return new WaitForSeconds(rouletteManager.spinDuration);
+        yield return new WaitForSeconds(7f);
         listManager.disableOrUnable(true);
         listManager.displayWinningNumber(randomNumber);
+        panelRoulletScript.acitvateOrDeactivatePanelText(true);
+        panelRoulletScript.SelectRandomValueBasedOnNumber(randomNumber);
         listManager.setNumberToList(randomNumbers); // Update the list manager
 
         // Move the UI element back to the starting position

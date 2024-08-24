@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 
 public class RouletteManager : MonoBehaviour
 {
@@ -16,6 +17,8 @@ public class RouletteManager : MonoBehaviour
     private Vector3 initialBallPosition; // Initial ball position
     private int totalSpins = 3; // Number of spins
 
+    [SerializeField] private GameObject winningNumber;
+    [SerializeField] private TMP_Text winningMiddleText;
     public bool IsSpinning { get; private set; } = false; // Property to check if the wheel is spinning
 
     private void Awake()
@@ -37,7 +40,7 @@ public class RouletteManager : MonoBehaviour
 
             // Start the spinning and ball movement coroutines
             StartCoroutine(SpinWheel());
-            StartCoroutine(MoveBallAlongPath());
+            StartCoroutine(MoveBallAlongPath(drawnNumber));
         }
     }
 
@@ -62,7 +65,7 @@ public class RouletteManager : MonoBehaviour
         IsSpinning = false; // Reset the spinning flag
     }
 
-    private IEnumerator MoveBallAlongPath()
+    private IEnumerator MoveBallAlongPath(int drawnNumber)
     {
         for (int spin = 0; spin < totalSpins; spin++)
         {
@@ -92,11 +95,38 @@ public class RouletteManager : MonoBehaviour
                 {
                     // Attach the ball to the target point
                     ballImage.transform.SetParent(currentPathPoint);
+                    StartCoroutine(activateImage(drawnNumber));
                     break; // Stop the movement as the ball has reached the target
                 }
 
                 currentPoint++;
             }
         }
+    }
+
+    private IEnumerator activateImage(int drawnNumber)
+    {
+        Vector3 startingScale = Vector3.one;
+        Vector3 endingScale = new Vector3(4,4,4);
+        winningNumber.SetActive(true);
+        winningMiddleText.text = drawnNumber.ToString();
+        float duration = 2f;
+        float elapsed = 0f;
+
+        while (elapsed < duration)
+        {
+            var t = elapsed / duration;
+            winningNumber.transform.localScale = Vector3.Lerp(startingScale, endingScale, t);
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
+
+        winningNumber.transform.localScale = endingScale;
+        yield return null;
+    }
+
+    public void deactivateImage()
+    {
+        winningNumber.SetActive(false);
     }
 }
