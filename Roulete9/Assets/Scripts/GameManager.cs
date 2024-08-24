@@ -65,6 +65,7 @@ public class GameManager : MonoBehaviour
         AddRandomNumber(randomNumber);
 
         betManager.DisableButtons();
+        betManager.SendBetsToServer();
         // Start the roulette wheel spin and ball movement
         rouletteManager.spinTheWheel(randomNumber);
 

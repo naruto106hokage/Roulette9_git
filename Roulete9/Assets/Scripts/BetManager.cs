@@ -4,7 +4,6 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
-using System.Linq;
 
 public class BetManager : MonoBehaviour
 {
@@ -226,20 +225,23 @@ public class BetManager : MonoBehaviour
     {
         if (isDeleteModeActive)
         {
-            Destroy(chip);
-            imagesToActivate.Remove(chip);
-            positionOfBetPlaced.Remove(chip.name); // Remove the chip's name from the dictionary
-
-            string buttonName = chip.transform.parent.name;
-            if (betsPlaced.ContainsKey(buttonName))
+            // Remove the chip and update the total bet value
+            string chipName = chip.name;
+            if (positionOfBetPlaced.ContainsKey(chipName))
             {
-                betsPlaced[buttonName] -= selectedBetValue;
-                if (betsPlaced[buttonName] <= 0)
+                int chipBetValue = positionOfBetPlaced[chipName];
+                positionOfBetPlaced.Remove(chipName);
+                betsPlaced[chipName] -= chipBetValue;
+
+                if (betsPlaced[chipName] <= 0)
                 {
-                    betsPlaced.Remove(buttonName);
+                    betsPlaced.Remove(chipName);
                 }
+
                 UpdateTotalBetValue();
             }
+            Destroy(chip);
+            imagesToActivate.Remove(chip);
             return;
         }
 
@@ -259,9 +261,15 @@ public class BetManager : MonoBehaviour
                 }
             }
 
-            UpdateBets(chip.transform.parent.name, selectedBetValue);
-            UpdateTotalBetValue();
+            positionOfBetPlaced[chip.name] = newValue;
+            UpdateBets(chip.name, selectedBetValue);
         }
+        else
+        {
+            Debug.LogWarning("TextMeshPro component does not contain a valid integer.");
+        }
+
+        UpdateTotalBetValue();
     }
 
     private Sprite GetSpriteForValue(int value)
@@ -287,10 +295,7 @@ public class BetManager : MonoBehaviour
         {
             foreach (Button button in buttons)
             {
-                if (button != null)
-                {
-                    button.interactable = false;
-                }
+                button.interactable = false;
             }
         }
     }
@@ -301,54 +306,72 @@ public class BetManager : MonoBehaviour
         {
             foreach (Button button in buttons)
             {
-                if (button != null)
-                {
-                    button.interactable = enable;
-                }
+                button.interactable = enable;
             }
+        }
+    }
+
+    private void UpdateBets(string position, int value)
+    {
+        if (betsPlaced.ContainsKey(position))
+        {
+            betsPlaced[position] += value;
+        }
+        else
+        {
+            betsPlaced[position] = value;
         }
     }
 
     public void DestroyAllImages()
     {
-        foreach (GameObject image in imagesToActivate)
+        foreach (GameObject img in imagesToActivate)
         {
-            Destroy(image);
+            Destroy(img);
         }
+
         imagesToActivate.Clear();
+        positionOfBetPlaced.Clear();
         betsPlaced.Clear();
-        positionOfBetPlaced.Clear(); // Clear the dictionary when all images are destroyed
         UpdateTotalBetValue();
     }
 
     private void DoubleAllBets()
     {
-        List<GameObject> currentImages = new List<GameObject>(imagesToActivate);
-        foreach (GameObject image in currentImages)
-        {
-            OnChipClick(null, image); // Double the bet on each chip
-        }
-        UpdateTotalBetValue();
-    }
+        Dictionary<string, int> newBetsPlaced = new Dictionary<string, int>(betsPlaced);
 
-    private void UpdateBets(string buttonName, int betValue)
-    {
-        if (betsPlaced.ContainsKey(buttonName))
+        foreach (KeyValuePair<string, int> bet in betsPlaced)
         {
-            betsPlaced[buttonName] += betValue;
-        }
-        else
-        {
-            betsPlaced[buttonName] = betValue;
-        }
-        UpdateTotalBetValue();
-    }
+            string position = bet.Key;
+            int value = bet.Value;
 
-    private void ToggleDeleteMode()
-    {
-        isDeleteModeActive = !isDeleteModeActive;
-        string mode = isDeleteModeActive ? "Delete Mode Activated" : "Delete Mode Deactivated";
-        Debug.Log(mode);
+            newBetsPlaced[position] = value * 2;
+            foreach (GameObject img in imagesToActivate)
+            {
+                if (img.name == position)
+                {
+                    TextMeshProUGUI tmpComponent = img.GetComponentInChildren<TextMeshProUGUI>();
+                    if (tmpComponent != null)
+                    {
+                        int newValue = value * 2;
+                        tmpComponent.text = newValue.ToString();
+
+                        Sprite appropriateSprite = GetSpriteForValue(newValue);
+                        if (appropriateSprite != null)
+                        {
+                            Image imgComponent = img.GetComponent<Image>();
+                            if (imgComponent != null)
+                            {
+                                imgComponent.sprite = appropriateSprite;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        betsPlaced = newBetsPlaced;
+        UpdateTotalBetValue();
     }
 
     private void UpdateTotalBetValue()
@@ -356,7 +379,7 @@ public class BetManager : MonoBehaviour
         if (totalBetValueText != null)
         {
             int totalBetValue = 0;
-            foreach (var bet in betsPlaced.Values)
+            foreach (var bet in positionOfBetPlaced.Values)
             {
                 totalBetValue += bet;
             }
@@ -374,8 +397,38 @@ public class BetManager : MonoBehaviour
         }
     }
 
-    public Dictionary<string, int> displayBetPositions()
+    private void ToggleDeleteMode()
     {
-        return positionOfBetPlaced;
+        isDeleteModeActive = !isDeleteModeActive;
+        Debug.Log("Delete mode: " + (isDeleteModeActive ? "Active" : "Inactive"));
     }
+
+    public void SendBetsToServer()
+    {
+        // Dictionary to store the last bet value for each position
+        Dictionary<string, int> lastBetValues = new Dictionary<string, int>();
+
+        foreach (GameObject img in imagesToActivate)
+        {
+            string position = img.name;
+            TextMeshProUGUI tmpComponent = img.GetComponentInChildren<TextMeshProUGUI>();
+            if (tmpComponent != null)
+            {
+                int betValue = int.Parse(tmpComponent.text); // Get the value on the chip
+
+                // Only keep the last value for each position
+                lastBetValues[position] = betValue;
+            }
+        }
+
+        // Example: Sending data using a hypothetical network manager
+        // NetworkManager.SendBetData(lastBetValues);
+
+        // Debug log to simulate sending the data
+        foreach (var bet in lastBetValues)
+        {
+            Debug.Log($"Sending bet: Position - {bet.Key}, Value - {bet.Value}");
+        }
+    }
+
 }
