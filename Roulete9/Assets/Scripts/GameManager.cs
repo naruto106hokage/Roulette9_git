@@ -43,13 +43,14 @@ public class GameManager : MonoBehaviour
 
     private IEnumerator StartGame()
     {
-        //betManager.EnableButtons(true);
+        betManager.EnableButtons(true);
         listManager.disableOrUnable(false);
+        betManager.DestroyAllImages();
         uiElementMover.SetStartingPosition();
         uiElementMover.SetupTimerText();
 
         // Set the timer duration and start it
-        float timerDuration = 120f; // Example duration; adjust as needed
+        float timerDuration = 10f; // Example duration; adjust as needed
         uiElementMover.StartTimer(timerDuration);
 
         // Wait for the UI element to move to the end position
@@ -58,12 +59,12 @@ public class GameManager : MonoBehaviour
             yield return null;
         }
 
-        // Generate and store a random number
+        //Generate and store a random number
         int randomNumber = Random.Range(0, rouletteManager.pathPoints.Count);
         Debug.Log("Random Number: " + randomNumber);
         AddRandomNumber(randomNumber);
 
-        //betManager.DisableButtons();
+        betManager.DisableButtons();
         // Start the roulette wheel spin and ball movement
         rouletteManager.spinTheWheel(randomNumber);
 
@@ -83,7 +84,7 @@ public class GameManager : MonoBehaviour
         }
 
         // Restart the timer
-        uiElementMover.StartTimer(timerDuration);
+        //uiElementMover.StartTimer(timerDuration);
     }
 
     private void AddRandomNumber(int number)
