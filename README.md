@@ -9,3 +9,7 @@ Timer for Next Spin: Countdown clock displaying the time remaining until the nex
 User-Friendly Controls: Clear, double, and remove bets with intuitive buttons.
 Enhanced Visuals: High-quality graphics with smooth animations for the spinning wheel and chips.
 This repository is ideal for developers interested in casino-style games, digital gambling simulation, or interactive Unity projects.
+
+
+https://github.com/user-attachments/assets/24e4adb2-5aa6-4fda-a3d6-5c1568ec4a75
+
